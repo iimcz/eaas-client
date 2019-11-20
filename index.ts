@@ -157,10 +157,18 @@ const run = (command: string, args: string[] = []) => {
     console.log(eaasClient);
     await page.click("Network Environment Overview");
     console.log("RUNNING");
-    const proxyURL = await page.page.evaluate(eaasClient => {
+    const proxyURLTelnet = await page.page.evaluate(eaasClient => {
         return eaasClient.getProxyURL({
             serverIP: "10.0.0.1",
             serverPort: "23",
+            localPort: "8099",
+        });
+    }, eaasClient);
+    console.log("telnet is available at:\n", proxyURLTelnet);
+    const proxyURL = await page.page.evaluate(eaasClient => {
+        return eaasClient.getProxyURL({
+            serverIP: "socks5",
+            serverPort: "",
             localPort: "8090",
         });
     }, eaasClient);
