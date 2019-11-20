@@ -145,7 +145,7 @@ const run = (command: string, args: string[] = []) => {
     await page.click("search");
     const envName = "tracenoizer";
     await page.type(envName);
-    await page.click("choose action", { before: envName });
+    await page.click("choose action");
     await page.click("run");
     await timeout(1000);
     const eaasClient = await page.page.evaluateHandle(
