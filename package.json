@@ -1,4 +1,5 @@
 {
+    "type": "module",
     "prettier": {
         "tabWidth": 4
     }
