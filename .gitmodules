@@ -1,0 +1,3 @@
+[submodule "eaas-client"]
+	path = eaas-client
+	url = ../eaas-client
