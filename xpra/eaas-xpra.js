@@ -39,6 +39,9 @@ const patchXpra = () => {
     {
       apply(target, thisArg, argArray) {
         if (globalThis._eaasDoNotGrabKeyboard) return true;
+        if (globalThis._eaasDoNotGrabKeyboardInFormElements &&
+          ["input", "button", "select", "textarea"].includes(
+            document.activeElement.nodeName.toLowerCase())) return true;
         const { clientHeight, clientWidth } = thisArg.container;
         if (clientHeight === 0 || clientWidth === 0) return true;
         return Reflect.apply(target, thisArg, argArray);
