@@ -38,6 +38,7 @@ const patchXpra = () => {
     XpraClient.prototype._keyb_process,
     {
       apply(target, thisArg, argArray) {
+        if (globalThis._eaasDoNotGrabKeyboard) return true;
         const { clientHeight, clientWidth } = thisArg.container;
         if (clientHeight === 0 || clientWidth === 0) return true;
         return Reflect.apply(target, thisArg, argArray);
