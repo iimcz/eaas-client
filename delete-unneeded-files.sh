@@ -25,6 +25,9 @@ delete_files third_party/event-target
 rm -rf contrib/
 
 set +x
-echo You can restore the deleted files by running:
-echo
-echo git submodule update --init
+
+cat << EOF
+You can restore the deleted files by running:
+
+git checkout; git submodule update --init
+EOF
