@@ -31,6 +31,7 @@ try {
 } catch {}
 
 const [name, tag = "latest"] = imageReference.split(":");
+const digest = imageReference.split("@").at(2);
 
 const api = String(
     Object.assign(new URL("/emil", url), { username: "", password: "" }),
@@ -63,7 +64,7 @@ console.log(`Importing ${name}:${tag} to ${api}...`);
 const { containerUrl, metadata } = await createTask(
     client,
     "/EmilContainerData/buildContainerImage",
-    { urlString: name, tag, containerType: "dockerhub" },
+    { urlString: name, tag, digest, containerType: "dockerhub" },
 );
 console.log(containerUrl, metadata);
 
