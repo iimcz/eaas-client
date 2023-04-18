@@ -41,4 +41,17 @@ class EaasClient extends Client {
         }
         if (result.userData) return result.userData;
     }
+
+    testUrl({ envId }) {
+        const url = new URL(
+            "http://localhost:8080/contrib/test-webcomponent/test.html",
+        );
+        url.hash = String(
+            new URLSearchParams({
+                eaasService: this.API_URL,
+                envId,
+            }),
+        );
+        return String(url);
+    }
 }

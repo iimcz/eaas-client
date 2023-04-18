@@ -22,4 +22,4 @@ const { id } = await client.apiFetch("/environment-repository/environments", {
     useXpra: true,
     xpraEncoding: "jpeg",
 });
-console.log(id);
+console.log(client.testUrl({envId: id}));
