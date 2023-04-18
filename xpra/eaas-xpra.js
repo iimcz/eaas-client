@@ -189,6 +189,37 @@ const patchXpra = () => {
     }
   );
 
+  const ghostCursorAuto = atob("iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH3gcBFCcYPPpNFQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAKDSURBVDjLlZM/SBtRHMe/93LepZ6eFIXQwU4GiopLHSxCKeUIiAUFRwcHYwZXxSWZsgTEIYiIboEEdPDvYMgZqEPFqUWK4GDULvZqKW3Jcekd713udYlizorND970+33eh/d7vx+ur6+7AATQaFSr1ejW1lYPAKkhkHMeM00zurq62gOgqSFwdHQ0ZppmdHFx8cV/w5zzWFtbW2x8fDxWLpejCwsLYQDiYxwBAEopisUi5ubmyNTU1OtkMvn8MVgEAMYYGGPI5/NobW0NxOPxN7Ztv0+lUlcA3AdB13VBKQVjDDs7O2hpaRFnZ2ff2rZdTKfTBoDqP8G7VsYYNjY2oCiKmEgkNMdx9JWVle9+uA68sVJKsb6+DkVRxGQyGbEsq5DL5X7chcU73a2zMsaQy+UERVGa5ufnI7ZtFzY3N3/ewHWd81sZY8hkMkIwGJTT6XTEsqyCruu/AHgC5zwmCMIt3NzcDFVVkc1meXt7OyeEIBAI8O7u7oBhGObk5GRhf3+/XGeUJAn9/f04OTlBqVRCKBSyl5eXryRJcgkhXJblakdHhwrAujXKsozt7W2vt7cXfX19pLOzE0dHR97Q0NCHw8NDo/afvPZGlwBAMBjE3t6ep6qqValUnLGxMRiGgd3dXSGRSHTVim0ADgAGgBMA0HXdE0XR1DTt+ODg4HM8Hvc8z8PS0pIwODj4bGBg4Kl/ZwkAeJ73OxKJHDuO83V6erokimJlZGQEFxcXOD095cPDw/dml5yfn3/RNO0jpfQbgD8A6NnZ2adUKuXNzMwgHA4Ll5eXLgDBP3ZPAMi+RNPa2trLfD7/bmJi4hWAkN8o1A73XSbUCqVajj60JQ3HXxKQQjZ2meK/AAAAAElFTkSuQmCC");
+
+  XpraWindow.prototype.set_cursor = new Proxy(XpraWindow.prototype.set_cursor, {
+    async apply(target, thisArg, argArray) {
+      const [encoding, w, h, xhot, yhot, img_data] = argArray;
+      if (thisArg.client.ghostCursor !== "none" && encoding == "png") {
+        const url = `data:image/${encoding};base64,${btoa(img_data)}`;
+        if (await isImageTransparent(url)) {
+          argArray[5] = ghostCursorAuto;
+        }
+      }
+      return Reflect.apply(target, thisArg, argArray);
+    },
+  });
+
+  async function isImageTransparent(url) {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const context = canvas.getContext("2d");
+    context.drawImage(img, 0, 0);
+    const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    for (let i = 3, ii = data.length; i < ii; i += 4) {
+      if (data[i] != 0) return false;
+    }
+    return true;
+  }
+
   // For debug use in `xpra-html5/html5/index.html`
   /*
   XpraClient = new Proxy(XpraClient, {
@@ -204,7 +235,7 @@ const patchXpra = () => {
 globalThis.loadXpra = (
   xpraUrl,
   xpraPath,
-  { xpraEncoding, pointerLock = false, debugLogPackets } = {},
+  { xpraEncoding, pointerLock = false, debugLogPackets, ghostCursor = "auto" } = {},
   eaasClientObj
 ) => {
   {
@@ -258,6 +289,8 @@ globalThis.loadXpra = (
   client.forceRelativeMouse = pointerLock;
   client.windowDecorations = false;
   client.debugLogPackets = debugLogPackets;
+  client.ghostCursor = ghostCursor;
+  // client.debug_categories.push("network", "geometry");
 
   client._clientGrabbedFirstClick = false;
 

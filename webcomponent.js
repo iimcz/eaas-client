@@ -71,6 +71,7 @@ class EaasClientElement extends HTMLElement {
     const networkLabel = this.getAttribute("network-label");
     const containerId = this.getAttribute("container-id")?.match(/\/?([^/]+)$/)[1];
     const xpraEncoding = this.getAttribute("xpra-encoding");
+    const ghostCursor = this.getAttribute("ghostCursor");
 
     if(containerId && !envId)
       envId = this.getAttribute("container-runtime-id");
@@ -199,6 +200,7 @@ class EaasClientElement extends HTMLElement {
       this.session = componentSession;
     } else {
       if (xpraEncoding) clientOptions.setXpraEncoding(xpraEncoding);
+      if (ghostCursor) clientOptions.ghostCursor = ghostCursor;
       await client.start(components, clientOptions);
     }
     await client.connect(container);
