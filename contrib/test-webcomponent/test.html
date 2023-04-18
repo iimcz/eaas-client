@@ -1,0 +1,24 @@
+<body>
+    <script type="module" src="../../webcomponent.js"></script>
+
+    <template id="template">
+        <eaas-environment id="example1" eaas-service="https://eaas.example/emil/"
+            environment-id="8e2e4d21-89f1-4ddd-8dd4-0a55f59d9d9f" autoplay enable-internet
+            style="border: red solid 10px;">
+            <strong>Please wait</strong> while the environment is being started ...
+        </eaas-environment>
+    </template>
+
+    <script>
+        /** @type {HTMLTemplateElement} */
+        globalThis.template;
+        const env = template.content.querySelector("eaas-environment");
+
+        const { eaasService, envId } = Object.fromEntries(new URLSearchParams(location.hash.slice(1) || location.search.slice(1)));
+
+        env.setAttribute("eaas-service", eaasService);
+        env.setAttribute("environment-id", envId);
+
+        document.body.append(template.content);
+    </script>
+</body>

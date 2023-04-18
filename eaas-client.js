@@ -15,6 +15,7 @@ import {
 
 
 import EventTarget from "./third_party/event-target/esm/index.js";
+import { ClientOptions } from "./lib/clientOptions.js";
 
 export {
     sendEsc,
@@ -73,7 +74,8 @@ export class Client extends EventTarget {
             xpraWidth: 640,
             xpraHeight: 480,
             xpraDPI: 96,
-            xpraEncoding: "jpeg"
+            xpraEncoding: "jpeg",
+            ghostCursor: undefined
         };
         this.emulatorContainer = emulatorContainer;
 
@@ -92,7 +94,8 @@ export class Client extends EventTarget {
             xpraWidth: width,
             xpraHeight: height,
             xpraDPI: dpi,
-            xpraEncoding: xpraEncoding
+            xpraEncoding: xpraEncoding,
+            ghostCursor: undefined
         };
     }
 
@@ -209,11 +212,16 @@ export class Client extends EventTarget {
     }
 
 
+    /**
+     * @param {Array<Object>} components
+     * @param {ClientOptions} options
+     */
     async start(components, options) {
 
         if (options) {
             console.log("setting xpra encoding to " + options.getXpraEncoding());
             this.xpraConf.xpraEncoding = options.getXpraEncoding();
+            this.xpraConf.ghostCursor = options.ghostCursor;
         }
 
         try {
