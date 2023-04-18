@@ -1,20 +1,14 @@
 #!/bin/sh
 //bin/sh -c : && exec deno run -A "$0" "$@"
 
-import { getTokenUsingResourceOwnerPassword } from "./eaas-client/lib/oauth-client.js";
-import { Client } from "./eaas-client/eaas-client.js";
-import { _fetch, Task } from "./eaas-client/lib/util.js";
+import { clientFromUrl } from "./lib.js";
 
 let [
     instanceUrl,
     imageReference = "registry.gitlab.com/emulation-as-a-service/emulators/qemu-eaas",
 ] = Deno.args;
 
-const url = new URL(instanceUrl);
-
-let { username, password } = url;
-username ||= "admin";
-password ||= "admin";
+const client = await clientFromUrl(instanceUrl);
 
 try {
     const repoUrl = new URL(imageReference);
@@ -33,42 +27,14 @@ try {
 const [name, tag = "latest"] = imageReference.split(":");
 const digest = imageReference.split("@").at(2);
 
-const api = String(
-    Object.assign(new URL("/emil", url), { username: "", password: "" }),
-);
-
-const createTask = async (client, path, data) => {
-    const { taskId } = await _fetch(
-        `${client.API_URL}${path}`,
-        "POST",
-        data,
-        client.idToken,
-    );
-    const task = new Task(taskId, client.API_URL, client.idToken);
-    const result = await task.done;
-    if (!result.object) return;
-    const object = JSON.parse(result.object);
-    return object;
-};
-
-const { id_token } = await getTokenUsingResourceOwnerPassword({
-    issuer: String(new URL("/auth/realms/master", api)),
-    username,
-    password,
-    client_id: "eaas",
-});
-
-const client = new Client(api, id_token, { emulatorContainer: {} });
-
-console.log(`Importing ${name}:${tag} to ${api}...`);
-const { containerUrl, metadata } = await createTask(
-    client,
+console.log(`Importing ${name}:${tag} to ${client.API_URL}...`);
+const { containerUrl, metadata } = await client.createTask(
     "/EmilContainerData/buildContainerImage",
     { urlString: name, tag, digest, containerType: "dockerhub" },
 );
 console.log(containerUrl, metadata);
 
-await createTask(client, "/EmilContainerData/importEmulator", {
+await client.createTask("/EmilContainerData/importEmulator", {
     imageUrl: containerUrl,
     metadata,
 });
