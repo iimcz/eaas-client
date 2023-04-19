@@ -15,7 +15,7 @@ export const clientFromUrl = async (instanceUrl) => {
               password,
               client_id: "eaas",
           })
-        : undefined;
+        : {};
 
     const client = new EaasClient(api, id_token, { emulatorContainer: {} });
     return client;
