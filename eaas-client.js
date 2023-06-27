@@ -4,22 +4,21 @@ import {
     SnapshotRequestBuilder,
 } from "./lib/componentSession.js";
 import {
-    ClientError,
-    sendEsc,
-    sendCtrlAltDel,
-    sendAltTab,
     _fetch,
+    ClientError,
+    sendAltTab,
+    sendCtrlAltDel,
+    sendEsc,
 } from "./lib/util.js";
 
 import EventTarget from "./third_party/event-target/esm/index.js";
 import { ClientOptions } from "./lib/clientOptions.js";
 
-export { sendEsc, sendCtrlAltDel, sendAltTab };
+export { sendAltTab, sendCtrlAltDel, sendEsc };
 export { ClientError, SnapshotRequestBuilder };
 
 /**
  * Main EaaS Client class
- *
  *
  * @export
  * @class Client
@@ -121,9 +120,12 @@ export class Client extends EventTarget {
                 // HACK: "OK" and "READY" are obsolete state names which might still be used by the eaas-server
                 emulatorState == "OK" ||
                 emulatorState == "READY"
-            )
+            ) {
                 session.keepalive();
-            else if (emulatorState == "STOPPED" || emulatorState == "FAILED") {
+            } else if (
+                emulatorState == "STOPPED" ||
+                emulatorState == "FAILED"
+            ) {
                 if (this.onEmulatorStopped) this.onEmulatorStopped();
                 session.keepalive();
                 this.dispatchEvent(
@@ -131,12 +133,13 @@ export class Client extends EventTarget {
                         detail: `${emulatorState}`,
                     }),
                 ); // .addEventListener("error", (e) => {})
-            } else
+            } else {
                 this.dispatchEvent(
                     new CustomEvent("error", {
                         detail: session,
                     }),
                 );
+            }
         }
     }
 
@@ -144,8 +147,8 @@ export class Client extends EventTarget {
         return this.activeView;
     }
 
-    /* 
-        needs to be a global client function, 
+    /*
+        needs to be a global client function,
         we may checkpoint more then a single machine in the future.
      */
     async checkpoint(request) {
@@ -290,8 +293,9 @@ export class Client extends EventTarget {
                 this.sessions.filter(
                     (sessionComp) => sessionComp.componentId === sc.componentId,
                 ).length > 0
-            )
+            ) {
                 continue;
+            }
 
             let session = new ComponentSession(
                 this.API_URL,

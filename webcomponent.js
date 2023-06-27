@@ -119,18 +119,20 @@ class EaasClientElement extends HTMLElement {
         const xpraEncoding = this.getAttribute("xpra-encoding");
         const ghostCursor = this.getAttribute("ghostCursor");
 
-        if (containerId && !envId)
+        if (containerId && !envId) {
             envId = this.getAttribute("container-runtime-id");
+        }
 
         const networkName =
             this.getAttribute("network-name") ?? `network-${Math.random()}`;
         const machine = new MachineComponentBuilder(envId, imageArchive);
         machine.setInteractive(true);
-        if (containerId)
+        if (containerId) {
             machine.setLinuxRuntime({
                 userContainerEnvironment: containerId,
                 userContainerArchive: imageArchive,
             });
+        }
 
         this.client.onEmulatorStopped = async () => {
             let result = await this.client.release();
@@ -155,8 +157,9 @@ class EaasClientElement extends HTMLElement {
                 const objectArchive = medium.getAttribute("object-archive");
 
                 if (url && type) machine.addUserMedia(url, type);
-                else if (objectId)
+                else if (objectId) {
                     machine.setObject(objectId, objectArchive || "zero conf");
+                }
             }
         }
 
@@ -255,8 +258,9 @@ class EaasClientElement extends HTMLElement {
 
         if (this.session.hasPointerLock()) this.session.setPointerLock();
 
-        for (const el of [...this.childNodes])
+        for (const el of [...this.childNodes]) {
             if (el !== this.container) el.remove();
+        }
 
         monitorStateChanges();
     }
