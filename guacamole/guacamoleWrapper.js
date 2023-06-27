@@ -8,8 +8,8 @@ import { baseUrl } from "../base-url.js";
 const guacamolePath = new URL("guacamole/", baseUrl);
 
 export const importGuacamole = once(async () => {
-  await Promise.all([
-    ...jsFiles.map((v) => loadScript(new URL(v, guacamolePath))),
-    ...cssFiles.map((v) => loadStyleSheet(new URL(v, guacamolePath))),
-  ]);
+    await Promise.all([
+        ...jsFiles.map((v) => loadScript(new URL(v, guacamolePath))),
+        ...cssFiles.map((v) => loadStyleSheet(new URL(v, guacamolePath))),
+    ]);
 });

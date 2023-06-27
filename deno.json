@@ -1,15 +1,10 @@
 {
-  "fmt": {
-    "files": {
-      "include": [
-        "lib/",
-        "eaas-client.js",
-        "eaas.js",
-        "webcomponent.js"
-      ]
-    },
-    "options": {
-      "indentWidth": 4
+    "fmt": {
+        "files": {
+            "include": ["lib/", "eaas-client.js", "eaas.js", "webcomponent.js"]
+        },
+        "options": {
+            "indentWidth": 4
+        }
     }
-  }
 }

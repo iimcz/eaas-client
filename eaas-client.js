@@ -1,9 +1,7 @@
+import { NetworkSession } from "./lib/networkSession.js";
 import {
-    NetworkSession
-} from "./lib/networkSession.js";
-import {
-    ComponentSession, 
-    SnapshotRequestBuilder
+    ComponentSession,
+    SnapshotRequestBuilder,
 } from "./lib/componentSession.js";
 import {
     ClientError,
@@ -13,45 +11,47 @@ import {
     _fetch,
 } from "./lib/util.js";
 
-
 import EventTarget from "./third_party/event-target/esm/index.js";
 import { ClientOptions } from "./lib/clientOptions.js";
 
-export {
-    sendEsc,
-    sendCtrlAltDel,
-    sendAltTab
-};
-export {
-    ClientError,
-    SnapshotRequestBuilder
-};
+export { sendEsc, sendCtrlAltDel, sendAltTab };
+export { ClientError, SnapshotRequestBuilder };
 
 /**
- * Main EaaS Client class 
+ * Main EaaS Client class
  *
  *
  * @export
  * @class Client
  * @extends {EventTarget}
- * @param {URL} api_entrypoint 
- * @param {Object} idToken 
- * @param {Object} kbLayoutPrefs 
+ * @param {URL} api_entrypoint
+ * @param {Object} idToken
+ * @param {Object} kbLayoutPrefs
  */
 export class Client extends EventTarget {
-    constructor(api_entrypoint, idToken = null,
-        {kbLayoutPrefs, emulatorContainer = document.getElementById("emulator-container")} = {}) {
+    constructor(
+        api_entrypoint,
+        idToken = null,
+        {
+            kbLayoutPrefs,
+            emulatorContainer = document.getElementById("emulator-container"),
+        } = {},
+    ) {
         super();
-        this.API_URL = api_entrypoint.replace(/([^:])(\/\/+)/g, '$1/').replace(/\/+$/, '');
+        this.API_URL = api_entrypoint
+            .replace(/([^:])(\/\/+)/g, "$1/")
+            .replace(/\/+$/, "");
         this.container = undefined;
-        this.kbLayoutPrefs = kbLayoutPrefs ? kbLayoutPrefs : {
-            language: {
-                name: 'us'
-            },
-            layout: {
-                name: 'pc105'
-            }
-        };
+        this.kbLayoutPrefs = kbLayoutPrefs
+            ? kbLayoutPrefs
+            : {
+                  language: {
+                      name: "us",
+                  },
+                  layout: {
+                      name: "pc105",
+                  },
+              };
         this.idToken = idToken;
 
         this.deleteOnUnload = true;
@@ -75,7 +75,7 @@ export class Client extends EventTarget {
             xpraHeight: 480,
             xpraDPI: 96,
             xpraEncoding: "jpeg",
-            ghostCursor: undefined
+            ghostCursor: undefined,
         };
         this.emulatorContainer = emulatorContainer;
 
@@ -84,8 +84,7 @@ export class Client extends EventTarget {
 
         // Clean up on window close
         window.addEventListener("beforeunload", () => {
-            if (this.deleteOnUnload)
-                this.release();
+            if (this.deleteOnUnload) this.release();
         });
     }
 
@@ -95,11 +94,11 @@ export class Client extends EventTarget {
             xpraHeight: height,
             xpraDPI: dpi,
             xpraEncoding: xpraEncoding,
-            ghostCursor: undefined
+            ghostCursor: undefined,
         };
     }
 
-    // ... token &&  { authorization : `Bearer ${token}`}, 
+    // ... token &&  { authorization : `Bearer ${token}`},
     // ... obj && {"content-type" : "application/json" }
     // ...obj && {body: JSON.stringify(obj) },
 
@@ -109,33 +108,37 @@ export class Client extends EventTarget {
         }
 
         for (const session of this.sessions) {
-            if (session.getNetwork() && !session.forceKeepalive)
-                continue;
+            if (session.getNetwork() && !session.forceKeepalive) continue;
 
             let result = await session.getEmulatorState();
-            if (!result)
-                continue;
+            if (!result) continue;
 
             let emulatorState = result.state;
 
-            if (emulatorState == "INITIALIZING" || emulatorState == "RUNNING" ||
+            if (
+                emulatorState == "INITIALIZING" ||
+                emulatorState == "RUNNING" ||
                 // HACK: "OK" and "READY" are obsolete state names which might still be used by the eaas-server
-                emulatorState == "OK" || emulatorState == "READY")
+                emulatorState == "OK" ||
+                emulatorState == "READY"
+            )
                 session.keepalive();
             else if (emulatorState == "STOPPED" || emulatorState == "FAILED") {
-                if (this.onEmulatorStopped)
-                    this.onEmulatorStopped();
+                if (this.onEmulatorStopped) this.onEmulatorStopped();
                 session.keepalive();
-                this.dispatchEvent(new CustomEvent("error", {
-                    detail: `${emulatorState}`
-                })); // .addEventListener("error", (e) => {})
+                this.dispatchEvent(
+                    new CustomEvent("error", {
+                        detail: `${emulatorState}`,
+                    }),
+                ); // .addEventListener("error", (e) => {})
             } else
-                this.dispatchEvent(new CustomEvent("error", {
-                    detail: session
-                }));
+                this.dispatchEvent(
+                    new CustomEvent("error", {
+                        detail: session,
+                    }),
+                );
         }
     }
-
 
     getActiveSession() {
         return this.activeView;
@@ -150,7 +153,6 @@ export class Client extends EventTarget {
         this.disconnect();
         return session.checkpoint(request);
     }
-
 
     disconnect() {
         if (!this.activeView) {
@@ -168,14 +170,25 @@ export class Client extends EventTarget {
         console.log("Viewer disconnected successfully.");
     }
 
-
     async attachNewEnv(sessionId, container, environmentRequest) {
-        let session = await _fetch(`${this.API_URL}/sessions/${sessionId}`, "GET", null, this.idToken);
+        let session = await _fetch(
+            `${this.API_URL}/sessions/${sessionId}`,
+            "GET",
+            null,
+            this.idToken,
+        );
         session.sessionId = sessionId;
         this.load(session);
 
-        environmentRequest.setKeyboard(this.kbLayoutPrefs.language.name, this.kbLayoutPrefs.layout.name);
-        let componentSession = await ComponentSession.createComponent(environmentRequest, this.API_URL, this.idToken);
+        environmentRequest.setKeyboard(
+            this.kbLayoutPrefs.language.name,
+            this.kbLayoutPrefs.layout.name,
+        );
+        let componentSession = await ComponentSession.createComponent(
+            environmentRequest,
+            this.API_URL,
+            this.idToken,
+        );
         this.pollStateIntervalId = setInterval(() => {
             this._pollState();
         }, 1500);
@@ -186,16 +199,20 @@ export class Client extends EventTarget {
         this.network.sessionComponents.push(componentSession);
         this.network.networkConfig.components.push({
             componentId: componentSession.componentId,
-            networkLabel: "Temp Client"
+            networkLabel: "Temp Client",
         });
         this.sessions.push(componentSession);
 
         await this.connect(container, componentSession);
     }
 
-
     async attach(sessionId, container, _componentId) {
-        let session = await _fetch(`${this.API_URL}/sessions/${sessionId}`, "GET", null, this.idToken);
+        let session = await _fetch(
+            `${this.API_URL}/sessions/${sessionId}`,
+            "GET",
+            null,
+            this.idToken,
+        );
         session.sessionId = sessionId;
         this.load(session);
 
@@ -211,23 +228,30 @@ export class Client extends EventTarget {
         await this.connect(container, componentSession);
     }
 
-
     /**
      * @param {Array<Object>} components
      * @param {ClientOptions} options
      */
     async start(components, options) {
-
         if (options) {
-            console.log("setting xpra encoding to " + options.getXpraEncoding());
+            console.log(
+                "setting xpra encoding to " + options.getXpraEncoding(),
+            );
             this.xpraConf.xpraEncoding = options.getXpraEncoding();
             this.xpraConf.ghostCursor = options.ghostCursor;
         }
 
         try {
-            const promisedComponents = components.map(async component => {
-                component.setKeyboard(this.kbLayoutPrefs.language.name, this.kbLayoutPrefs.layout.name);
-                let componentSession = await ComponentSession.createComponent(component, this.API_URL, this.idToken);
+            const promisedComponents = components.map(async (component) => {
+                component.setKeyboard(
+                    this.kbLayoutPrefs.language.name,
+                    this.kbLayoutPrefs.layout.name,
+                );
+                let componentSession = await ComponentSession.createComponent(
+                    component,
+                    this.API_URL,
+                    this.idToken,
+                );
                 this.sessions.push(componentSession);
                 if (component.isInteractive() === true) {
                     this.defaultView = componentSession;
@@ -242,7 +266,6 @@ export class Client extends EventTarget {
 
             await Promise.all(promisedComponents);
 
-
             if (options && options.isNetworkEnabled()) {
                 console.log("starting network...");
                 this.network = new NetworkSession(this.API_URL, this.idToken);
@@ -255,20 +278,27 @@ export class Client extends EventTarget {
         }
     }
 
-
     load(session) {
         const sessionId = session.sessionId;
         const sessionComponents = session.components;
         const networkInfo = session.network;
 
         for (const sc of sessionComponents) {
-            if (sc.type !== "machine")
+            if (sc.type !== "machine") continue;
+
+            if (
+                this.sessions.filter(
+                    (sessionComp) => sessionComp.componentId === sc.componentId,
+                ).length > 0
+            )
                 continue;
 
-            if (this.sessions.filter((sessionComp) => sessionComp.componentId === sc.componentId).length > 0)
-                continue;
-
-            let session = new ComponentSession(this.API_URL, sc.environmentId, sc.componentId, this.idToken);
+            let session = new ComponentSession(
+                this.API_URL,
+                sc.environmentId,
+                sc.componentId,
+                this.idToken,
+            );
             this.sessions.push(session);
         }
 
@@ -277,10 +307,14 @@ export class Client extends EventTarget {
     }
 
     async _connectToNetwork(component, networkID) {
-        const result = await _fetch(`${this.API_URL}/networks/${networkID}/addComponentToSwitch`, "POST", {
+        const result = await _fetch(
+            `${this.API_URL}/networks/${networkID}/addComponentToSwitch`,
+            "POST",
+            {
                 componentId: component.getId(),
             },
-            this.idToken);
+            this.idToken,
+        );
         return result;
     }
 
@@ -291,8 +325,7 @@ export class Client extends EventTarget {
 
         if (this.network) {
             // we do not release by default network session, as they are detached by default
-            if (destroyNetworks)
-                await this.network.release();
+            if (destroyNetworks) await this.network.release();
             return;
         }
 
@@ -306,8 +339,7 @@ export class Client extends EventTarget {
     }
 
     getSession(id) {
-        if (!this.network)
-            throw new Error("no sessions available");
+        if (!this.network) throw new Error("no sessions available");
 
         return this.network.getSession(id);
     }
@@ -326,31 +358,25 @@ export class Client extends EventTarget {
             console.log(componentSession);
             sessionInfo.push({
                 id: conf.componentId,
-                title: conf.networkLabel
+                title: conf.networkLabel,
             });
         }
         return sessionInfo;
     }
 
-
     async connect(container, view) {
         if (!view) {
-            if(this.defaultView)
-            {
+            if (this.defaultView) {
                 view = this.defaultView;
-            }
-            else
-            {
+            } else {
                 console.log("no view defined. using first session");
                 view = this.sessions[0];
             }
         }
 
-        if (this.activeView)
-            this.disconnect();
+        if (this.activeView) this.disconnect();
 
-        if (!view)
-            throw new Error("no active view possible");
+        if (!view) throw new Error("no active view possible");
 
         this.activeView = view;
         console.log(`Connecting viewer... @ ${container}`);
@@ -365,8 +391,7 @@ export class Client extends EventTarget {
     }
 
     async detach(name, detachTime_minutes) {
-        if (!this.network)
-            throw new Error("No network session available");
+        if (!this.network) throw new Error("No network session available");
 
         await this.network.detach(name, detachTime_minutes);
         window.onbeforeunload = () => {};
@@ -381,7 +406,7 @@ export class Client extends EventTarget {
             let result = await session.stop();
             results.push({
                 id: session.getId(),
-                result: result
+                result: result,
             });
         }
         return results;

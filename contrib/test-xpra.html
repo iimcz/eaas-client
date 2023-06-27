@@ -1,10 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <div id="emulator-container" class="eaas-emulator-container-transcursor"></div>
-<script src="https://code.jquery.com/jquery-3.3.1.min.js" referrerpolicy="no-referrer"></script>
+<script
+    src="https://code.jquery.com/jquery-3.3.1.min.js"
+    referrerpolicy="no-referrer"
+></script>
 <script src="eaas-client.js"></script>
 <script>
-const url = new URL("http://localhost:8090");
+    const url = new URL("http://localhost:8090");
 
-const client = new EaasClient.Client("", $("#emulator-container")[0]);
-client.prepareAndLoadXpra(String(url));
+    const client = new EaasClient.Client("", $("#emulator-container")[0]);
+    client.prepareAndLoadXpra(String(url));
 </script>
