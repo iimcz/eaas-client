@@ -4,9 +4,3 @@
 [submodule "guacamole/guacamole-client-eaas"]
 	path = guacamole/guacamole-client-eaas
 	url = https://gitlab.com/emulation-as-a-service/guacamole-client-eaas/
-[submodule "third_party/event-target"]
-	path = third_party/event-target
-	url = https://github.com/ungap/event-target
-[submodule "third_party/text-encode-transform-polyfill"]
-	path = third_party/text-encode-transform-polyfill
-	url = https://github.com/GoogleChromeLabs/text-encode-transform-polyfill

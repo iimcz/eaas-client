@@ -21,7 +21,6 @@ delete_files() {
 
 delete_files xpra/xpra-html5
 delete_files guacamole/guacamole-client-eaas
-delete_files third_party/event-target
 rm -rf contrib/
 
 set +x

@@ -11,7 +11,6 @@ import {
     sendEsc,
 } from "./lib/util.js";
 
-import EventTarget from "./third_party/event-target/esm/index.js";
 import { ClientOptions } from "./lib/clientOptions.js";
 
 export { sendAltTab, sendCtrlAltDel, sendEsc };
