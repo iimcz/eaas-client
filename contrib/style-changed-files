@@ -1,0 +1,9 @@
+#!/bin/sh -xeu
+
+self="$(realpath -- "$0" || printf %s "$0")"
+cd -- "$(dirname -- "$self")"
+
+gitdir="$(git rev-parse --show-toplevel)"
+cd -- "$gitdir"
+
+exec npx pretty-quick

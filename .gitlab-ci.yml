@@ -4,7 +4,10 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
 build:
+  image: node
   script:
+    - "npm ci"
+    - "npx prettier --check . || :"
     - ":"
   artifacts:
     paths:
@@ -21,4 +24,4 @@ pages:
       - "*"
   only:
     variables:
-       - $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      - $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH

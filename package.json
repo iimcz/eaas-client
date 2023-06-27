@@ -1,6 +1,9 @@
 {
     "type": "module",
     "prettier": {
-        "tabWidth": 4
+        "trailingComma": "all"
+    },
+    "devDependencies": {
+        "prettier": "2.8.7"
     }
 }
