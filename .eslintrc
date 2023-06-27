@@ -1,13 +1,13 @@
 {
-  "extends": ["eslint:recommended"],
-  "rules": {
-    "indent": ["error", 4]
-  },
-  "parserOptions": {
-    "sourceType": "module"
-  },
-  "env": {
-    "es2021": true,
-    "browser": true
-  }
+    "extends": ["eslint:recommended"],
+    "rules": {
+        "indent": ["error", 4]
+    },
+    "parserOptions": {
+        "sourceType": "module"
+    },
+    "env": {
+        "es2021": true,
+        "browser": true
+    }
 }

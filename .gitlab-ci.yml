@@ -1,24 +1,27 @@
 image: busybox
 
 variables:
-  GIT_SUBMODULE_STRATEGY: recursive
+    GIT_SUBMODULE_STRATEGY: recursive
 
 build:
-  script:
-    - ":"
-  artifacts:
-    paths:
-      - "*"
+    image: node
+    script:
+        - "npm ci"
+        - "npx prettier --check . || :"
+        - ":"
+    artifacts:
+        paths:
+            - "*"
 
 pages:
-  script:
-    - mkdir -p public
-    # HACK: Delete broken symlinks
-    - find -L -type l -delete
-    - "mv * public/ || :"
-  artifacts:
-    paths:
-      - "*"
-  only:
-    variables:
-       - $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    script:
+        - mkdir -p public
+        # HACK: Delete broken symlinks
+        - find -L -type l -delete
+        - "mv * public/ || :"
+    artifacts:
+        paths:
+            - "*"
+    only:
+        variables:
+            - $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH

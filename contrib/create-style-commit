@@ -1,0 +1,44 @@
+#!/bin/sh -eu
+
+runCommit() {
+    commitMsg="$1"
+    origArgs="$2"
+    shift 2
+
+    self="$(realpath -- "$0" || printf %s "$0")"
+    baseSelf="$(basename -- "$self")"
+
+    cd -- "$(dirname -- "$self")"
+
+    gitdir="$(git rev-parse --show-toplevel)"
+    relSelf="${self#$gitdir/}"
+
+    cd -- "$gitdir"
+
+    if test -n "$(git status --porcelain)"; then
+        git status
+        echo "$baseSelf: Working tree is not clean, aborting!"
+        exit 1
+    fi
+
+    "$@"
+
+    git commit -aF - <<EOF
+$commitMsg
+
+Command: $relSelf $origArgs
+EOF
+}
+
+case "${1-}" in
+--deno)
+    runCommit 'style: run `deno fmt`, then prettier' "$*" eval deno fmt ';' npx prettier --write .
+    ;;
+"")
+    runCommit "style: run prettier" "$*" npx prettier --write .
+    ;;
+*)
+    printf '%s: invalid options -- %s\n' "$0" "$*"
+    exit 2
+    ;;
+esac
