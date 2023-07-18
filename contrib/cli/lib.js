@@ -1,6 +1,6 @@
-import { Client } from "./eaas-client/eaas-client.js";
-import { getTokenUsingResourceOwnerPassword } from "./eaas-client/lib/oauth-client.js";
-import { _fetch, Task } from "./eaas-client/lib/util.js";
+import { Client } from "../../eaas-client.js";
+import { getTokenUsingResourceOwnerPassword } from "../../lib/oauth-client.js";
+import { _fetch, Task } from "../../lib/util.js";
 
 export const clientFromUrl = async (instanceUrl) => {
     const url = new URL(instanceUrl);

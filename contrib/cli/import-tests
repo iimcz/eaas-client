@@ -1,4 +1,5 @@
 #!/bin/sh -xeu
+cd -- "$(dirname -- "$(realpath -- "$0" || printf %s "$0")")"
 
 instanceUrl="$1"
 
