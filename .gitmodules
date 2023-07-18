@@ -4,3 +4,6 @@
 [submodule "guacamole/guacamole-client-eaas"]
 	path = guacamole/guacamole-client-eaas
 	url = https://gitlab.com/emulation-as-a-service/guacamole-client-eaas/
+[submodule "eaas-client"]
+	path = contrib/cli/eaas-client
+	url = ../eaas-client

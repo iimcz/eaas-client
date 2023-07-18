@@ -1,0 +1,9 @@
+#!/bin/sh -xeu
+
+instanceUrl="$1"
+
+./import-emulator.js "$instanceUrl"
+soundhw=pcspk ./import-environment.js "$instanceUrl"
+
+./import-emulator.js "$instanceUrl" "https://gitlab.com/emulation-as-a-service/emulators/browser/-/tree/chrome-53"
+./create-browser-environment.js "$instanceUrl" ghostCursor "data:text/html,<body style='width:50%;border:red solid 10px;cursor:none'>"
