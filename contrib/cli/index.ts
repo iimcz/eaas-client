@@ -53,12 +53,12 @@ const xpathStartsWithIBefore = (string: string, after: string) =>
     `(${xpathStartsWithI(after)}/preceding::*${xpathStartsWithI(string)})
       [position()=last()]`;
 
-const evaluate = function*(expr: string) {
+const evaluate = function* (expr: string) {
     const it = document.evaluate(expr, document);
     for (let val; (val = it.iterateNext()); yield val);
 };
 
-const timeout = (time_ms: number) => new Promise(r => setTimeout(r, time_ms));
+const timeout = (time_ms: number) => new Promise((r) => setTimeout(r, time_ms));
 
 // [...document.querySelectorAll("a, button")].filter(v => v.innerText.trim().toLowerCase().startsWith(string.toLowerCase()) && v.getBoundingClientRect().width !== 0)
 
@@ -85,10 +85,10 @@ class Page2 {
             : before
             ? this.waitForStringBefore(string, before)
             : this.waitForString(string));
-        console.log(await obj.evaluate(v => v.outerHTML));
-        obj.evaluate(v => (v.style.outline = "5px red solid"));
+        console.log(await obj.evaluate((v) => v.outerHTML));
+        obj.evaluate((v) => (v.style.outline = "5px red solid"));
         await timeout(1000);
-        obj.evaluate(v => ((v as HTMLElement).style.outline = "unset"));
+        obj.evaluate((v) => ((v as HTMLElement).style.outline = "unset"));
         await obj.click();
     }
     async type(string: string) {
@@ -157,7 +157,7 @@ const run = (command: string, args: string[] = []) => {
     console.log(eaasClient);
     await page.click("Network Environment Overview");
     console.log("RUNNING");
-    const proxyURLTelnet = await page.page.evaluate(eaasClient => {
+    const proxyURLTelnet = await page.page.evaluate((eaasClient) => {
         return eaasClient.getProxyURL({
             serverIP: "10.0.0.1",
             serverPort: "23",
@@ -165,7 +165,7 @@ const run = (command: string, args: string[] = []) => {
         });
     }, eaasClient);
     console.log("telnet is available at:\n", proxyURLTelnet);
-    const proxyURL = await page.page.evaluate(eaasClient => {
+    const proxyURL = await page.page.evaluate((eaasClient) => {
         return eaasClient.getProxyURL({
             serverIP: "socks5",
             serverPort: "",
@@ -180,7 +180,7 @@ const run = (command: string, args: string[] = []) => {
     await run(EAAS_PROXY_PATH, [proxyURL]);
     console.log("DONE");
 })()
-    .catch(e => {
+    .catch((e) => {
         console.log(e);
         throw e;
     })

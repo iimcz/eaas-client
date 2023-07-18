@@ -1,9 +1,9 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "strict": true
- }
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "strict": true
+    }
 }
