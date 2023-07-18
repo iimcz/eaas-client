@@ -1,0 +1,4 @@
+#!/bin/sh
+
+case "$(id -u)" in 0) export DENO_INSTALL=/usr/local ;; esac
+curl -fsSL https://deno.land/x/install/install.sh | sh
