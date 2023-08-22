@@ -17,6 +17,7 @@ export { sendAltTab, sendCtrlAltDel, sendEsc };
 export { ClientError, SnapshotRequestBuilder };
 
 const STATE_POLLING_DELAY = 5000;
+const KEEPALIVE_DELAY = 14000;
 
 /**
  * Main EaaS Client class
@@ -81,6 +82,7 @@ export class Client extends EventTarget {
 
         // ID for registered this.pollState() with setInterval()
         this.pollStateIntervalId = null;
+        this.nextKeepaliveTimestamp = 0;
 
         // Clean up on window close
         window.addEventListener("beforeunload", () => {
@@ -103,7 +105,13 @@ export class Client extends EventTarget {
     // ...obj && {body: JSON.stringify(obj) },
 
     async _pollState() {
-        if (this.network) {
+        const curtime = performance.now();
+        const triggerKeepalive = curtime > this.nextKeepaliveTimestamp;
+        if (triggerKeepalive) {
+            this.nextKeepaliveTimestamp = curtime + KEEPALIVE_DELAY;
+        }
+
+        if (triggerKeepalive && this.network) {
             this.network.keepalive();
         }
 
@@ -122,7 +130,9 @@ export class Client extends EventTarget {
                 emulatorState == "OK" ||
                 emulatorState == "READY"
             ) {
-                session.keepalive();
+                if (triggerKeepalive) {
+                    session.keepalive();
+                }
             } else if (
                 emulatorState == "STOPPED" ||
                 emulatorState == "FAILED"
