@@ -16,6 +16,8 @@ import { ClientOptions } from "./lib/clientOptions.js";
 export { sendAltTab, sendCtrlAltDel, sendEsc };
 export { ClientError, SnapshotRequestBuilder };
 
+const STATE_POLLING_DELAY = 5000;
+
 /**
  * Main EaaS Client class
  *
@@ -193,7 +195,7 @@ export class Client extends EventTarget {
         );
         this.pollStateIntervalId = setInterval(() => {
             this._pollState();
-        }, 1500);
+        }, STATE_POLLING_DELAY);
 
         this._connectToNetwork(componentSession, sessionId);
         componentSession.forceKeepalive = true;
@@ -224,7 +226,7 @@ export class Client extends EventTarget {
         }
         this.pollStateIntervalId = setInterval(() => {
             this._pollState();
-        }, 1500);
+        }, STATE_POLLING_DELAY);
 
         console.log("attching component:" + componentSession);
         await this.connect(container, componentSession);
@@ -264,7 +266,7 @@ export class Client extends EventTarget {
             console.log("starting client side keep alive");
             this.pollStateIntervalId = setInterval(() => {
                 this._pollState();
-            }, 1500);
+            }, STATE_POLLING_DELAY);
 
             await Promise.all(promisedComponents);
 
