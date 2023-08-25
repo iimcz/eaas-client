@@ -325,6 +325,7 @@ export class Client extends EventTarget {
 
         this.network = new NetworkSession(this.API_URL, this.idToken);
         this.network.load(sessionId, this.sessions, networkInfo);
+        this.network.isEphemeral = false;
     }
 
     async _connectToNetwork(component, networkID) {
