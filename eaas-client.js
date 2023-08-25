@@ -115,8 +115,14 @@ export class Client extends EventTarget {
             this.network.keepalive();
         }
 
+        // NOTE: ephemeral sessions should be handled explicitly here,
+        //       all background (== non-ephemeral) ones will be handled
+        //       by the backend as part of the network-session lifecycle!
+
         for (const session of this.sessions) {
-            if (session.getNetwork() && !session.forceKeepalive) continue;
+            if (!session.isEphemeral) {
+                continue;
+            }
 
             let result = await session.getEmulatorState();
             if (!result) continue;
@@ -208,7 +214,6 @@ export class Client extends EventTarget {
         }, STATE_POLLING_DELAY);
 
         this._connectToNetwork(componentSession, sessionId);
-        componentSession.forceKeepalive = true;
 
         this.network.sessionComponents.push(componentSession);
         this.network.networkConfig.components.push({
@@ -314,6 +319,7 @@ export class Client extends EventTarget {
                 sc.componentId,
                 this.idToken,
             );
+            session.isEphemeral = false;
             this.sessions.push(session);
         }
 
@@ -323,33 +329,44 @@ export class Client extends EventTarget {
 
     async _connectToNetwork(component, networkID) {
         const result = await _fetch(
-            `${this.API_URL}/networks/${networkID}/addComponentToSwitch`,
+            `${this.API_URL}/networks/${networkID}/components`,
             "POST",
             {
                 componentId: component.getId(),
+                ephemeral: component.isEphemeral,
             },
             this.idToken,
         );
         return result;
     }
 
-    async release(destroyNetworks = false) {
-        console.log("released: " + destroyNetworks);
+    async release(all = false) {
         this.disconnect();
         clearInterval(this.pollStateIntervalId);
 
-        if (this.network) {
-            // we do not release by default network session, as they are detached by default
-            if (destroyNetworks) await this.network.release();
-            return;
-        }
+        const whatmsg = all ? "all" : "ephemeral";
+        console.log(`Releasing ${whatmsg} sessions...`);
 
         let url;
         for (const session of this.sessions) {
-            url = await session.stop();
+            // NOTE: only ephemeral sessions should be stopped here,
+            //       other sessions will be handled by the backend!
+            if (all || session.isEphemeral) {
+                url = await session.stop();
+            }
+
             await session.release();
         }
+
         this.sessions = [];
+
+        if (this.network) {
+            await this.network.release();
+            this.network = undefined;
+        }
+
+        console.log(`Released ${whatmsg} sessions`);
+
         return url;
     }
 
