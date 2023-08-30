@@ -70,6 +70,7 @@ export class Client extends EventTarget {
         this.envsComponentsData = [];
 
         this.isConnected = false;
+        this.isReleased = false;
 
         this.xpraConf = {
             xpraWidth: 640,
@@ -342,6 +343,14 @@ export class Client extends EventTarget {
     }
 
     async release(all = false) {
+        // Workaround for bad consumers calling this method redundantly!
+        if (this.isReleased) {
+            console.log(new Error("Client already released, skip redundant call"));
+            return;
+        } else {
+            this.isReleased = true;
+        }
+
         this.disconnect();
         clearInterval(this.pollStateIntervalId);
 
