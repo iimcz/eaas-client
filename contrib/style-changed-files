@@ -6,4 +6,5 @@ cd -- "$(dirname -- "$self")"
 gitdir="$(git rev-parse --show-toplevel)"
 cd -- "$gitdir"
 
-exec npx pretty-quick
+# HACK: Work around https://github.com/azz/pretty-quick/issues/164
+exec npx -p prettier@^2 -p pretty-quick pretty-quick
