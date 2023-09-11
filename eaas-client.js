@@ -16,6 +16,9 @@ import { ClientOptions } from "./lib/clientOptions.js";
 export { sendAltTab, sendCtrlAltDel, sendEsc };
 export { ClientError, SnapshotRequestBuilder };
 
+const STATE_POLLING_DELAY = 5000;
+const KEEPALIVE_DELAY = 14000;
+
 /**
  * Main EaaS Client class
  *
@@ -67,6 +70,7 @@ export class Client extends EventTarget {
         this.envsComponentsData = [];
 
         this.isConnected = false;
+        this.isReleased = false;
 
         this.xpraConf = {
             xpraWidth: 640,
@@ -79,6 +83,7 @@ export class Client extends EventTarget {
 
         // ID for registered this.pollState() with setInterval()
         this.pollStateIntervalId = null;
+        this.nextKeepaliveTimestamp = 0;
 
         // Clean up on window close
         window.addEventListener("beforeunload", () => {
@@ -101,12 +106,24 @@ export class Client extends EventTarget {
     // ...obj && {body: JSON.stringify(obj) },
 
     async _pollState() {
-        if (this.network) {
+        const curtime = performance.now();
+        const triggerKeepalive = curtime > this.nextKeepaliveTimestamp;
+        if (triggerKeepalive) {
+            this.nextKeepaliveTimestamp = curtime + KEEPALIVE_DELAY;
+        }
+
+        if (triggerKeepalive && this.network) {
             this.network.keepalive();
         }
 
+        // NOTE: ephemeral sessions should be handled explicitly here,
+        //       all background (== non-ephemeral) ones will be handled
+        //       by the backend as part of the network-session lifecycle!
+
         for (const session of this.sessions) {
-            if (session.getNetwork() && !session.forceKeepalive) continue;
+            if (!session.isEphemeral) {
+                continue;
+            }
 
             let result = await session.getEmulatorState();
             if (!result) continue;
@@ -120,7 +137,9 @@ export class Client extends EventTarget {
                 emulatorState == "OK" ||
                 emulatorState == "READY"
             ) {
-                session.keepalive();
+                if (triggerKeepalive) {
+                    session.keepalive();
+                }
             } else if (
                 emulatorState == "STOPPED" ||
                 emulatorState == "FAILED"
@@ -193,10 +212,9 @@ export class Client extends EventTarget {
         );
         this.pollStateIntervalId = setInterval(() => {
             this._pollState();
-        }, 1500);
+        }, STATE_POLLING_DELAY);
 
         this._connectToNetwork(componentSession, sessionId);
-        componentSession.forceKeepalive = true;
 
         this.network.sessionComponents.push(componentSession);
         this.network.networkConfig.components.push({
@@ -224,7 +242,7 @@ export class Client extends EventTarget {
         }
         this.pollStateIntervalId = setInterval(() => {
             this._pollState();
-        }, 1500);
+        }, STATE_POLLING_DELAY);
 
         console.log("attching component:" + componentSession);
         await this.connect(container, componentSession);
@@ -264,7 +282,7 @@ export class Client extends EventTarget {
             console.log("starting client side keep alive");
             this.pollStateIntervalId = setInterval(() => {
                 this._pollState();
-            }, 1500);
+            }, STATE_POLLING_DELAY);
 
             await Promise.all(promisedComponents);
 
@@ -302,42 +320,63 @@ export class Client extends EventTarget {
                 sc.componentId,
                 this.idToken,
             );
+            session.isEphemeral = false;
             this.sessions.push(session);
         }
 
         this.network = new NetworkSession(this.API_URL, this.idToken);
         this.network.load(sessionId, this.sessions, networkInfo);
+        this.network.isEphemeral = false;
     }
 
     async _connectToNetwork(component, networkID) {
         const result = await _fetch(
-            `${this.API_URL}/networks/${networkID}/addComponentToSwitch`,
+            `${this.API_URL}/networks/${networkID}/components`,
             "POST",
             {
                 componentId: component.getId(),
+                ephemeral: component.isEphemeral,
             },
             this.idToken,
         );
         return result;
     }
 
-    async release(destroyNetworks = false) {
-        console.log("released: " + destroyNetworks);
+    async release(all = false) {
+        // Workaround for bad consumers calling this method redundantly!
+        if (this.isReleased) {
+            console.log(new Error("Client already released, skip redundant call"));
+            return;
+        } else {
+            this.isReleased = true;
+        }
+
         this.disconnect();
         clearInterval(this.pollStateIntervalId);
 
-        if (this.network) {
-            // we do not release by default network session, as they are detached by default
-            if (destroyNetworks) await this.network.release();
-            return;
-        }
+        const whatmsg = all ? "all" : "ephemeral";
+        console.log(`Releasing ${whatmsg} sessions...`);
 
         let url;
         for (const session of this.sessions) {
-            url = await session.stop();
+            // NOTE: only ephemeral sessions should be stopped here,
+            //       other sessions will be handled by the backend!
+            if (all || session.isEphemeral) {
+                url = await session.stop();
+            }
+
             await session.release();
         }
+
         this.sessions = [];
+
+        if (this.network) {
+            await this.network.release();
+            this.network = undefined;
+        }
+
+        console.log(`Released ${whatmsg} sessions`);
+
         return url;
     }
 
